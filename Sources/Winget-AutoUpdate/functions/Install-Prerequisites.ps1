@@ -28,8 +28,16 @@ function Install-Prerequisites {
                 $Installer = "$env:TEMP\VC_redist.$OSArch.exe"
                 Write-ToLog "-> Downloading $SourceURL..."
                 Invoke-WebRequest $SourceURL -OutFile $Installer -UseBasicParsing
-                Write-ToLog "-> Installing VC_redist.$OSArch.exe..."
+                $ExpectedHash = "463f736d5925566edc0e8f7d8e70c0a1fc95adf44afa5d5390b979f5a35934cc"
+                Invoke-WebRequest $SourceURL -OutFile $Installer
+                $ActualHash = Get-FileHash $Installer -Algorithm SHA256
+
+                if ($ActualHash.Hash -ne $ExpectedHash) {
+                    Write-Host "❌ Hash mismatch! Aborting installation."
+                    exit 1
+                }
                 Start-Process -FilePath $Installer -Args "/quiet /norestart" -Wait
+
                 Write-ToLog "-> MS Visual C++ 2015-2022 installed successfully." "Green"
             }
             catch {
